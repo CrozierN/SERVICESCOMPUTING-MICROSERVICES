@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  materialinventory:
+    image: ${DOCKER_REGISTRY-}materialinventory
+    build:
+      context: .
+      dockerfile: MaterialInventory/Dockerfile
