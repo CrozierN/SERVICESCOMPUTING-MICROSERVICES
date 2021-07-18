@@ -1,13 +1,69 @@
 version: '3.4'
 
 services:
+
   materialinventory:
+    container_name: materialinventory
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - "ConnectionStrings:MaterialConnectionString=Server=inventorydb;Database=InventoryDb;User Id=sa;Password=saP@ssw0rd;"
       - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_HTTPS_PORT=8081
+    depends_on:
+      - inventorydb
     ports:
-      - "80"
-      - "443"
+      - "8080:80"
+      - "8081:443"
     volumes:
       - ~/.aspnet/https:/root/.aspnet/https:ro
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+
+  procurement.api:
+    container_name: procurement.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - "DatabaseSettings:ConnectionString=mongodb://procurementdb:27017"
+      - ASPNETCORE_HTTPS_PORT=8084
+    depends_on:
+      - procurementdb
+    ports:
+      - "8084:80"
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+
+  reportaggregator:
+    container_name: reportaggregator
+    environment: 
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - "ApiSettings:ProcurementUrl=http://procurement.api"
+      - "ApiSettings:MaterialInventoryUrl=https://materialinventory" 
+    depends_on:
+      - procurement.api
+      - materialinventory
+    ports:
+      - "8086:80"
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+
+  inventorydb:
+    container_name: inventorydb
+    environment:
+      SA_PASSWORD: "saP@ssw0rd"
+      ACCEPT_EULA: "Y"
+    restart: always
+    ports:
+      - "1433:1433"
+
+  procurementdb:
+    container_name: procurementdb
+    restart: always
+    ports:
+      - "27017:27017" 
+    volumes:
+      - mongo_data:/data/db
+
+

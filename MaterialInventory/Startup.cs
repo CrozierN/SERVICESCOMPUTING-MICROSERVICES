@@ -18,11 +18,13 @@ namespace MaterialInventory
     //e8c371b9-8375-4d62-bc89-7da209b9bdf1
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            Environment = env;
             Configuration = configuration;
         }
 
+        public IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -43,12 +45,33 @@ namespace MaterialInventory
 
             services.AddScoped<IManageMaterialRepo, SQLMaterialRepo>();
 
-            services.AddDbContext<MaterialContext>(opt => opt.UseSqlite(
-                Configuration.GetConnectionString("Default"))
-            );
+            // Environment Variables
+            //var server = Configuration["DbServer"] ?? "Localhost";
+            //var port = Configuration["DbPort"] ?? "1433";
+            //var user = Configuration["DbUser"] ?? "SA";
+            //var password = Configuration["DbPassowrd"] ?? "Pa$$w0d2019";
+            //var database = Configuration["Database"] ?? "Material";
 
+
+            //if (Environment.IsDevelopment())
+            //{
+            //    services.AddDbContext<MaterialContext>(opt => opt.UseSqlite(
+            //    Configuration.GetConnectionString("Default"))
+            //    );
+            //}
+            //else
+            //{
+            //    services.AddDbContext<MaterialContext>(options =>
+            //      options.UseSqlServer(Configuration.GetConnectionString("MaterialDbConnectionString")
+            //      ));
+            //}
+
+            services.AddDbContext<MaterialContext>(options =>
+                 options.UseSqlServer(Configuration.GetConnectionString("MaterialConnectionString")
+                 ));
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

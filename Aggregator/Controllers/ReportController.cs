@@ -1,46 +1,72 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using Aggregator.Models;
+using Aggregator.Services;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Aggregator.Controllers
 {
-    [Route("api/[controller]")]
-    public class AggregatorController : Controller
+    [Route("api/v1/Aggregation/[controller]")]
+    public class ReportController : ControllerBase
     {
-        // GET: api/values
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IProcurementService _procurementService;
+        private readonly IMaterialInventoryService _materialInventoryService;
+
+        public ReportController(IProcurementService procurementService, IMaterialInventoryService materialInventoryService)
         {
-            return new string[] { "value1", "value2" };
+            _procurementService = procurementService;
+            _materialInventoryService = materialInventoryService;
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("{id}", Name = "GetProcurementReport")]
+        [ProducesResponseType(typeof(ProcurementInventoryReport), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<ProcurementInventoryReport>> GetProcurementReport(string id)
         {
-            return "value";
-        }
+            
+            var procurement = await _procurementService.GetProcurement(id);
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
+            if(procurement == null){
+                return NotFound();
+            }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+            foreach (var item in procurement.Parts)
+            {
+                var material = await _materialInventoryService.GetMaterial(item.PartId);
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+                // set additional product fields
+                item.PartModel = material.part_model;
+                item.Fit = material.fit;
+                if (material.quantity <= 5)
+                {
+                    item.Recommend = "Low on Stock, Recommended Purchase";
+                }
+                else
+                {
+                    item.Recommend = "Enough Stock";
+                }
+            }
+            
+
+
+            var procurementInventory = new ProcurementInventoryReport
+            {
+                Id = id,
+                TotalPrice = procurement.TotalPrice,
+                RequestDate = procurement.RequestDate,
+                Parts = procurement.Parts
+            };
+
+            //public string Id { get; set; }
+            //public double TotalPrice { get; set; }
+            //public string RequestDate { get; set; }
+            //public IEnumerable<Part> Parts { get; set; }
+
+            return Ok(procurementInventory);
         }
     }
 }

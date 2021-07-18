@@ -24,7 +24,6 @@ namespace MaterialInventory
 
                 try
                 {
-                    //MaterialData.Initialize(services);
                     SeedMaterial.Initialize(services);
                 }
                 catch (Exception ex)
