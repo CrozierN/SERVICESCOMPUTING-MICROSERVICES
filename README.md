@@ -1,7 +1,7 @@
 # Project Documentation
 
-## BScHons-Computer Science
-## Services Computing 
+BScHons-Computer Science
+Services Computing 
 
 In this project, I showcased my ability to implement a Microservices Architectural style application using 
 ASP.Net Core and Docker with Envoy proxy, acting as an API Gateway for all downstream services.
